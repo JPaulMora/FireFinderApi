@@ -3,8 +3,22 @@ const router = express.Router();
 const wc = require('which-country');
 const axios = require('axios');
 const df = require('date-fns');
+const cache = require("memory-cache");
 
 const cacheDuration = 3600000;
+
+const cacheMiddleware = (req, res, next) => {
+    const { month, year } = req.query;
+    const cacheKey = `${month}-${year}`;
+    const cachedData = cache.get(cacheKey);
+  
+    if (cachedData) {
+      res.json(cachedData);
+    } else {
+      // Continue to the next middleware or endpoint
+      next();
+    }
+  };
 
 router.use(function (req, res, next) {
     res._json = res.json;
@@ -52,6 +66,10 @@ async function fetchData(month, year) {
     const url = `https://eonet.gsfc.nasa.gov/api/v3/events?category=wildfires&status=closed&start=${start_date_str}&end=${end_date_str}`;
 
     res = await axios.get(url);
+
+    //TODO format response data to have only required info.
+
+    
 }
 
 
@@ -64,15 +82,18 @@ router.get("/status", (request, response) => {
     response.send(status);
 });
 
-router.get("/fires", async (request, response) => {
+router.get("/fires",cacheMiddleware, async (request, response) => {
     let month = request.query.month;
     let year = request.query.year;
 
     fetchData(month, year).then(res => {
+        // Cache the fetched data
+        const cacheKey = `${month}-${year}`;
+        cache.put(cacheKey, data, cacheDuration);
         response.send(res);
     }).catch(err => {
         response.status = 500;
-        res.json({
+        response.json({
             success: false,
             message: 'Internal server error'
         });
