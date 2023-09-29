@@ -1,0 +1,14 @@
+{
+  "name": "firefinderapi",
+  "version": "0.0.1",
+  "description": "Where are the fires challenge",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Juan Mora",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.18.2"
+  }
+}
