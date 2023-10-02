@@ -89,13 +89,13 @@ router.get("/fires",cacheMiddleware, async (request, response) => {
     fetchData(month, year).then(res => {
         // Cache the fetched data
         const cacheKey = `${month}-${year}`;
-        cache.put(cacheKey, data, cacheDuration);
+        cache.put(cacheKey, res, cacheDuration);
         response.send(res);
     }).catch(err => {
         response.status = 500;
         response.json({
             success: false,
-            message: 'Internal server error'
+            message: err
         });
     })
 })
