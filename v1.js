@@ -11,14 +11,14 @@ const cacheMiddleware = (req, res, next) => {
     const { month, year } = req.query;
     const cacheKey = `${month}-${year}`;
     const cachedData = cache.get(cacheKey);
-  
+
     if (cachedData) {
-      res.json(cachedData);
+        res.json(cachedData);
     } else {
-      // Continue to the next middleware or endpoint
-      next();
+        // Continue to the next middleware or endpoint
+        next();
     }
-  };
+};
 
 router.use(function (req, res, next) {
     res._json = res.json;
@@ -48,7 +48,7 @@ async function fetchData(month, year) {
     };
 
     if (!monthMap.hasOwnProperty(month)) {
-       throw new Error('Invalid month shortcode.');
+        throw new Error('Invalid month shortcode.');
     }
 
     let end_date = new Date();
@@ -64,12 +64,15 @@ async function fetchData(month, year) {
     let start_date_str = df.format(start_date, "yyyy-MM-dd");
 
     const url = `https://eonet.gsfc.nasa.gov/api/v3/events?category=wildfires&status=closed&start=${start_date_str}&end=${end_date_str}`;
-
+    console.log("Fetching from API");
     res = await axios.get(url);
 
-    //TODO format response data to have only required info.
-
-    
+    if (res.status == 200) {
+        let events = res.data.events;
+        return events.map((e) => {
+            return { eventName: e.title, country: wc(e.geometry[0].coordinates) }
+        })
+    }
 }
 
 
@@ -82,7 +85,7 @@ router.get("/status", (request, response) => {
     response.send(status);
 });
 
-router.get("/fires",cacheMiddleware, async (request, response) => {
+router.get("/fires", cacheMiddleware, async (request, response) => {
     let month = request.query.month;
     let year = request.query.year;
 
