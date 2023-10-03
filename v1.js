@@ -64,12 +64,21 @@ async function fetchData(month, year) {
     let start_date_str = df.format(start_date, "yyyy-MM-dd");
 
     const url = `https://eonet.gsfc.nasa.gov/api/v3/events?category=wildfires&status=closed&start=${start_date_str}&end=${end_date_str}`;
-    console.log("Fetching from API");
+    console.log(`Fetching from API: ${url}`);
     res = await axios.get(url);
 
     if (res.status == 200) {
         let events = res.data.events;
-        return events.map((e) => {
+
+        let filtered_events = events.filter(e => {
+            if (e.closed) {
+                const eventClosedDate = new Date(e.closed);
+                return eventClosedDate.getMonth() === end_date.getMonth() &&
+                       eventClosedDate.getFullYear() === end_date.getFullYear();
+            }
+        })
+
+        return filtered_events.map((e) => {
             return { eventName: e.title, country: wc(e.geometry[0].coordinates) }
         })
     }
